@@ -1,109 +1,92 @@
-import { StatusBar } from "expo-status-bar";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Platform,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as Sharing from "expo-sharing";
-import { useState } from "react";
+import * as React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Icon } from "@rneui/themed";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import MapView from "react-native-maps";
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const stackOptions = ({ navigation }) => ({
+  headerRight: () => HeaderRightIcon(navigation),
+});
+
+function MapScreen() {
+  return (
+    <View style={styles.screen}>
+      <MapView
+        initialRegion={{
+          latitude: 37.78825,
+          longitude: -122.4324,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+        style={styles.map}
+      />
+    </View>
+  );
+}
+
+function SettingsScreen() {
+  return (
+    <View style={styles.screen}>
+      <Text>Settings Screen</Text>
+    </View>
+  );
+}
+
+function HomeScreen() {
+  return (
+    <View style={styles.screen}>
+      <Text>Home Screen</Text>
+    </View>
+  );
+}
+
+function HeaderRightIcon(navigation) {
+  return (
+    <Icon name="settings" onPress={() => navigation.navigate("Settings")} />
+  );
+}
 
 export default function App() {
-  let [selectedImage, setSelectedImage] = useState(null);
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        initialRouteName="Home"
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
 
-  let openImagePickerAsync = async () => {
-    let permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            switch (route.name) {
+              case "Home":
+                iconName = "home";
+                break;
+              case "Map":
+                iconName = "map";
+                break;
+              case "Settings":
+                iconName = "settings";
+                break;
+            }
 
-    if (permissionResult.granted === false) {
-      return alert("Permission to access camera roll is required!");
-    }
-
-    let pickerResult = await ImagePicker.launchImageLibraryAsync();
-
-    if (pickerResult.cancelled !== true) {
-      setSelectedImage({ uri: pickerResult.uri });
-    }
-  };
-
-  let openShareDialogAsync = async () => {
-    if (Platform.OS === "web") {
-      return alert("Uh oh, sharing isn't available on your platform!");
-    }
-
-    await Sharing.shareAsync(selectedImage.uri);
-  };
-
-  if (selectedImage) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.heading}>Heading</Text>
-
-        <Image source={{ uri: selectedImage.uri }} style={styles.image} />
-
-        <TouchableOpacity style={styles.button} onPress={openShareDialogAsync}>
-          <Text style={styles.buttonText}>Share Photo</Text>
-        </TouchableOpacity>
-        <StatusBar style="auto" />
-      </View>
-    );
-  } else {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.heading}>Heading</Text>
-
-        <Text style={styles.text}>
-          To share a photo from your phone with a friend, just press the button
-          below!
-        </Text>
-
-        <TouchableOpacity style={styles.button} onPress={openImagePickerAsync}>
-          <Text style={styles.buttonText}>Pick a Photo</Text>
-        </TouchableOpacity>
-        <StatusBar style="auto" />
-      </View>
-    );
-  }
+            return <Icon name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: "orange",
+          tabBarInactiveTintColor: "gray",
+        })}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Map" component={MapScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
-  },
-  heading: {
-    color: "orange",
-    padding: 5,
-    fontSize: 40,
-    borderBottomColor: "gray",
-    borderBottomWidth: 2,
-  },
-  text: {
-    color: "#222",
-    fontSize: 18,
-    marginTop: 15,
-    marginBottom: 15,
-  },
-  image: {
-    width: 300,
-    height: 300,
-    resizeMode: "cover",
-    borderColor: "black",
-    borderWidth: 2,
-  },
-  button: {
-    backgroundColor: "orange",
-    padding: 10,
-    borderRadius: 8,
-    marginVertical: 10,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-  },
+  screen: { flex: 1, alignItems: "center", justifyContent: "center" },
+  map: { width: "100%", height: "100%" },
 });
